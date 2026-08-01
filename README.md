@@ -1,16 +1,15 @@
-# 📄 Documentação do Projeto: Consultador de Processos (Datajud + CNJ)
+# 📄 Consultador de Processos (Datajud + CNJ)
 
 > **Resumo Executivo:** Ferramenta automatizada em Python para leitura de planilhas Excel, consulta em lote à base nacional de dados do Poder Judiciário (Datajud) e classificação precisa do status de arquivamento de processos judiciais.
 
 ---
 
-## 💡 Como a Solução Foi Projetada (Visão de Arquitetura)
+## 💡 Visão de Arquitetura
 
 Para garantir que o sistema não falhe e apresente dados 100% confiáveis para o time jurídico e operacional, a solução combina **duas abordagens tecnológicas complementares**:
 
 ```
-[ Planilha Excel ] ➡️ [ Motor em Python (Async) ] ➡️ [ 1. API Datajud (Metadados) ]
-                                                ➡️ [ 2. WebService SGT/TPU (Tradução) ]
+[ Planilha Excel ] ➡️ [ Motor em Python (Async) ] ➡️ [ 1. API Datajud (Metadados) ] ➡️ [ 2. WebService SGT/TPU (Tradução) ]
 ```
 
 ### 1. A API Pública do Datajud (Consulta em Lote)
@@ -24,9 +23,9 @@ Para evitar que processos baixados passem despercebidos, o sistema consulta a **
 
 ---
 
-## 🛠️ Guia Prático de Execução (Passo a Passo)
+## 🛠️ Guia Prático de Execução
 
-### 📋 Pré-requisitos (Instalação Única)
+### 📋 Pré-requisitos
 
 > *Nota: Este passo só precisa ser feito **uma única vez** no computador onde o script vai rodar.*
 
@@ -39,7 +38,7 @@ python3 -m pip install pandas openpyxl aiohttp
 
 ---
 
-### 🚀 Como Rodar no Dia a Dia (2 Opções de Uso)
+### 🚀 Como Rodar no Dia a Dia
 
 #### Opção A: Execução Super Simples (Duplo Clique) ⭐ *Recomendado*
 
