@@ -136,13 +136,13 @@ async def classificar_status(session: aiohttp.ClientSession, movimentos: list) -
 
 
 # ==============================================================================
-# PIPELINE PRINCIPAL DE PROCESSAMENTO (COM RETRY E TIMEOUT AUMENTADO)
+# PIPELINE PRINCIPAL DE PROCESSAMENTO (COM RETRY, TIMEOUT E EXTRAÇÃO DE CLASSE)
 # ==============================================================================
 async def consultar_processo(session: aiohttp.ClientSession, numero_cnj: str, semaphore: asyncio.Semaphore) -> dict:
     sigla_tribunal = extrair_sigla_tribunal(numero_cnj)
 
     if not sigla_tribunal:
-        return {"STATUS": "ERRO: CNJ INVÁLIDO", "DATA DO ARQUIVAMENTO": ""}
+        return {"STATUS": "ERRO: CNJ INVÁLIDO", "DATA DO ARQUIVAMENTO": "", "CLASSE": ""}
 
     url = f"https://api-publica.datajud.cnj.jus.br/api_publica_{sigla_tribunal}/_search"
     limpo = re.sub(r"\D", "", str(numero_cnj))
@@ -160,32 +160,37 @@ async def consultar_processo(session: aiohttp.ClientSession, numero_cnj: str, se
                         hits = dados.get("hits", {}).get("hits", [])
 
                         if not hits:
-                            return {"STATUS": "NÃO ENCONTRADO / SIGILO", "DATA DO ARQUIVAMENTO": ""}
+                            return {"STATUS": "NÃO ENCONTRADO / SIGILO", "DATA DO ARQUIVAMENTO": "", "CLASSE": ""}
 
                         processo = hits[0].get("_source", {})
                         movimentos = processo.get("movimentos", [])
                         
+                        # Extrai o nome da classe processual (ex: "Execução Fiscal", "Cumprimento de sentença")
+                        classe_obj = processo.get("classe", {})
+                        classe_nome = classe_obj.get("nome", "") if isinstance(classe_obj, dict) else ""
+
                         status, data_arq = await classificar_status(session, movimentos)
 
                         return {
                             "STATUS": status,
-                            "DATA DO ARQUIVAMENTO": data_arq if status == "ARQUIVADO" else ""
+                            "DATA DO ARQUIVAMENTO": data_arq if status == "ARQUIVADO" else "",
+                            "CLASSE": classe_nome
                         }
 
                     elif response.status in (401, 403):
-                        return {"STATUS": "ERRO 401/403: CHAVE INVÁLIDA", "DATA DO ARQUIVAMENTO": ""}
+                        return {"STATUS": "ERRO 401/403: CHAVE INVÁLIDA", "DATA DO ARQUIVAMENTO": "", "CLASSE": ""}
                     else:
                         if tentativa < MAX_RETRIES:
                             await asyncio.sleep(1)
                             continue
-                        return {"STATUS": f"ERRO HTTP {response.status}", "DATA DO ARQUIVAMENTO": ""}
+                        return {"STATUS": f"ERRO HTTP {response.status}", "DATA DO ARQUIVAMENTO": "", "CLASSE": ""}
 
             except Exception as e:
                 # Se der erro de rede ou TimeoutError, aguarda um pouco e tenta novamente
                 if tentativa < MAX_RETRIES:
                     await asyncio.sleep(1.5 * (tentativa + 1))  # Backoff progressivo (1.5s, 3s...)
                     continue
-                return {"STATUS": f"ERRO CONEXÃO: {type(e).__name__}", "DATA DO ARQUIVAMENTO": ""}
+                return {"STATUS": f"ERRO CONEXÃO: {type(e).__name__}", "DATA DO ARQUIVAMENTO": "", "CLASSE": ""}
 
 
 async def main():
@@ -214,8 +219,10 @@ async def main():
 
         resultados = await asyncio.gather(*tarefas)
 
+    # Mapeia as respostas para as colunas na planilha de saída
     df["STATUS"] = [r["STATUS"] for r in resultados]
     df["DATA DO ARQUIVAMENTO"] = [r["DATA DO ARQUIVAMENTO"] for r in resultados]
+    df["CLASSE"] = [r["CLASSE"] for r in resultados]
 
     df.to_excel(ARQUIVO_SAIDA, index=False)
     print("--------------------------------------------------")

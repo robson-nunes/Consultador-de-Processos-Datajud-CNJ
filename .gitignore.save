@@ -1,0 +1,51 @@
+# ==========================================
+# Arquivos de Sistema (macOS e Windows)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# Python & Ambientes Virtuais
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+
+# ==========================================
+# Arquivos Temporários e Resultados (Data/Excel)
+# ==========================================
+# Trava de arquivo aberto do Excel (ex: ~$Busca_Arquivados.xlsx)
+~$*.xlsx
+~$*.xls
+
+# Planilhas de resultados geradas (evita poluir o Git com saídas)
+*RESULTADO*.xlsx
+
+# Payloads em JSON do debug
+payload_*.json
+
+# ==========================================
+# IDEs e Editores de Código
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
